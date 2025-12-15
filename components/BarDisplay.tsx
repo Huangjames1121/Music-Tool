@@ -1,5 +1,6 @@
 import React from 'react';
 import { getTempoMarking } from '../constants';
+import { Play } from 'lucide-react';
 
 interface BarDisplayProps {
   currentBar: number;
@@ -10,6 +11,7 @@ interface BarDisplayProps {
   onTap: () => void;
   isTapping?: boolean;
   tapCount?: number;
+  autoStartMode?: boolean; // New prop
 }
 
 const BarDisplay: React.FC<BarDisplayProps> = ({ 
@@ -20,13 +22,21 @@ const BarDisplay: React.FC<BarDisplayProps> = ({
     bpm, 
     onTap,
     isTapping = false,
-    tapCount = 0
+    tapCount = 0,
+    autoStartMode = false
 }) => {
   // Logic to determine what to display
-  // If isTapping is true (user is actively setting beats), show tapCount.
-  // Otherwise, show the metronome currentBar.
   const mainValue = isTapping ? tapCount : currentBar;
-  const mainLabel = isTapping ? "Tap Count" : "Measure Count";
+  
+  let mainLabel = "Measure Count";
+  if (isTapping) {
+      if (autoStartMode) {
+          mainLabel = "Tap to Start";
+      } else {
+          mainLabel = "Tap Count";
+      }
+  }
+
   const tempoName = getTempoMarking(bpm);
 
   return (
@@ -36,8 +46,9 @@ const BarDisplay: React.FC<BarDisplayProps> = ({
         group flex flex-col items-center justify-center p-4 md:p-8 rounded-3xl shadow-2xl w-full max-w-md mx-auto transform transition-all relative overflow-hidden select-none min-h-[260px] md:min-h-[320px]
         bg-slate-800 border cursor-pointer hover:bg-slate-800/80 active:scale-95 touch-manipulation
         ${isTapping ? 'border-accent shadow-[0_0_30px_rgba(34,211,238,0.1)]' : 'border-slate-700 hover:border-slate-500'}
+        ${autoStartMode && !isPlaying ? 'ring-2 ring-indigo-500/50' : ''}
       `}
-      title="Tap rhythmic beats here to set Tempo AND Bar Length simultaneously"
+      title={autoStartMode ? "Tap exactly the number of beats to start" : "Tap rhythmic beats here"}
     >
         
         {/* Background Pulse Effect */}
@@ -49,6 +60,14 @@ const BarDisplay: React.FC<BarDisplayProps> = ({
              key={tapCount} // Triggers animation on change
              className={`absolute inset-0 bg-white opacity-0 pointer-events-none transition-opacity duration-300 ${isTapping ? 'animate-[ping_0.2s_ease-out]' : ''}`}
         />
+
+        {/* Auto Start Badge */}
+        {autoStartMode && !isPlaying && (
+            <div className="absolute top-4 left-4 bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border border-indigo-500/30 flex items-center gap-1">
+                <Play size={10} className="fill-current" />
+                Auto Start
+            </div>
+        )}
 
         {/* Top Right: BPM Display */}
         <div className="absolute top-4 right-4 md:top-6 md:right-6 flex flex-col items-end transition-colors group-hover:text-accent">
@@ -64,7 +83,13 @@ const BarDisplay: React.FC<BarDisplayProps> = ({
         
         {/* Main Number Display */}
         <div className={`text-7xl md:text-9xl font-black font-mono tracking-tighter tabular-nums leading-none mb-4 transition-colors group-active:text-accent ${isTapping ? 'text-accent' : 'text-white'}`}>
-          {mainValue}
+          {isTapping && autoStartMode ? (
+              <span className="flex items-baseline">
+                  {tapCount}<span className="text-4xl md:text-6xl text-slate-600">/{beatsPerBar}</span>
+              </span>
+          ) : (
+              mainValue
+          )}
         </div>
         
         {/* Visual Beats Indicator */}
@@ -109,14 +134,19 @@ const BarDisplay: React.FC<BarDisplayProps> = ({
                 <div className="text-slate-500 font-mono text-[10px] md:text-xs font-bold tracking-widest uppercase animate-in fade-in key={beatsPerBar}">
                     {beatsPerBar} BEATS PER BAR
                 </div>
-                {!isTapping && (
+                {!isTapping && !autoStartMode && (
                     <div className="text-[9px] md:text-[10px] text-slate-600 font-medium mt-1 opacity-0 group-hover:opacity-100 transition-opacity hidden md:block">
                         (Tap {beatsPerBar + 1} times to set to {beatsPerBar + 1}/4)
                     </div>
                 )}
-                {isTapping && (
+                {isTapping && !autoStartMode && (
                     <div className="text-[9px] md:text-[10px] text-accent font-medium mt-1 animate-pulse">
                         Setting beats...
+                    </div>
+                )}
+                 {autoStartMode && !isPlaying && (
+                    <div className="text-[9px] md:text-[10px] text-indigo-400 font-medium mt-1 animate-pulse">
+                        Tap {beatsPerBar} times to begin at Measure 2
                     </div>
                 )}
             </div>

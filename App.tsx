@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Square, RotateCcw, Minus, Plus, Settings2, ChevronDown, ChevronUp, Music, Activity, Volume2, VolumeX, BookOpen } from 'lucide-react';
+import { Play, Square, RotateCcw, Minus, Plus, Settings2, ChevronDown, ChevronUp, Music, Activity, Volume2, VolumeX, BookOpen, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useMetronome } from './hooks/useMetronome';
 import { useTapTempo } from './hooks/useTapTempo';
 import BarDisplay from './components/BarDisplay';
@@ -23,6 +23,9 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('practice');
   const [isMuted, setIsMuted] = useState(false);
   
+  // New Auto-Start Mode State
+  const [autoStartMode, setAutoStartMode] = useState(false);
+  
   // New state for display logic
   const [tapCount, setTapCount] = useState(0);
 
@@ -30,7 +33,7 @@ const App: React.FC = () => {
   const beatsPerBar = customBeats ?? SIGNATURE_CONFIGS[timeSigKey].beats;
   const noteValue = customVal ?? SIGNATURE_CONFIGS[timeSigKey].value;
 
-  const { isPlaying, currentBar, currentBeat, start, stop, reset } = useMetronome({
+  const { isPlaying, currentBar, currentBeat, start, stop, reset, setBar } = useMetronome({
     bpm,
     beatsPerBar,
     noteValue,
@@ -42,21 +45,41 @@ const App: React.FC = () => {
   };
 
   // Unified Tap Handler
-  const handleTapUpdate = ({ bpm, count }: { bpm: number | null, count: number }) => {
-      // Set the visual tap count
+  const handleTapUpdate = ({ bpm: newBpm, count }: { bpm: number | null, count: number }) => {
       setTapCount(count);
 
-      // 1. Update Beat Count (Bar Length)
-      // If user taps 3 times, set to 3 beats per bar.
-      if (count >= 1) {
-          setCustomBeats(count);
-          // Default to quarter notes if we are setting custom structure
-          if (!customVal) setCustomVal(4);
-      }
+      if (autoStartMode) {
+          // --- Auto Start Mode Logic ---
+          // In this mode, we do NOT change the structure (beats per bar).
+          // We wait until the user taps exactly the number of beats in the bar.
+          
+          if (count === beatsPerBar) {
+              // 1. Update BPM if valid
+              if (newBpm) {
+                  handleBpmChange(newBpm);
+              }
 
-      // 2. Update BPM if calculated
-      if (bpm) {
-          handleBpmChange(bpm);
+              // 2. Start Logic
+              // We treat the taps as "Measure 1". So we start the metronome at "Measure 2".
+              setBar(2); 
+              start();
+              
+              // 3. Clear the visual tap overlay so the BarDisplay shows the metronome count
+              setTapCount(0);
+          }
+      } else {
+          // --- Standard Mode Logic ---
+          // 1. Update Beat Count (Bar Length) dynamic setting
+          if (count >= 1) {
+              setCustomBeats(count);
+              // Default to quarter notes if we are setting custom structure
+              if (!customVal) setCustomVal(4);
+          }
+
+          // 2. Update BPM if calculated
+          if (newBpm) {
+              handleBpmChange(newBpm);
+          }
       }
   };
   
@@ -173,6 +196,7 @@ const App: React.FC = () => {
                 onTap={handleTap}
                 isTapping={isTappingMode}
                 tapCount={tapCount}
+                autoStartMode={autoStartMode}
             />
 
             {/* Playback Controls */}
@@ -230,6 +254,22 @@ const App: React.FC = () => {
                     <div className="w-full bg-slate-800/50 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-slate-700/50 animate-in fade-in slide-in-from-top-4 duration-200">
                         <div className="flex flex-col gap-6">
                             
+                            {/* Auto Start Toggle */}
+                            <div className="flex items-center justify-between bg-slate-700/30 p-3 rounded-xl border border-slate-700/50">
+                                <div className="flex flex-col">
+                                    <span className="text-sm font-bold text-slate-200">Auto Start Mode</span>
+                                    <span className="text-[10px] text-slate-400">Tap beats to count-in & start at Bar 2</span>
+                                </div>
+                                <button 
+                                    onClick={() => setAutoStartMode(!autoStartMode)}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${autoStartMode ? 'bg-indigo-500' : 'bg-slate-600'}`}
+                                >
+                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${autoStartMode ? 'translate-x-6' : 'translate-x-1'}`} />
+                                </button>
+                            </div>
+
+                            <div className="h-[1px] bg-slate-700/50 w-full"></div>
+
                             {/* BPM Control */}
                             <div className="flex-1 w-full space-y-2">
                                 <div className="flex justify-between items-center mb-1">

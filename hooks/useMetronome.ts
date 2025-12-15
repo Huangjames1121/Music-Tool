@@ -142,6 +142,13 @@ export const useMetronome = ({ bpm, beatsPerBar, noteValue, isMuted, onBeat }: U
      beatCountRef.current = 1;
   }, [stop]);
 
+  // Manually set the bar number (e.g. for starting at bar 2)
+  const setBar = useCallback((bar: number) => {
+      setCurrentBar(bar);
+      barCountRef.current = bar;
+      beatCountRef.current = 1; // Always reset to first beat of that bar when manually setting
+  }, []);
+
   // Handle cleanup
   useEffect(() => {
     return () => {
@@ -164,6 +171,7 @@ export const useMetronome = ({ bpm, beatsPerBar, noteValue, isMuted, onBeat }: U
     currentBeat,
     start,
     stop,
-    reset
+    reset,
+    setBar
   };
 };
