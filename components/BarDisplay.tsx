@@ -1,4 +1,5 @@
 import React from 'react';
+import { getTempoMarking } from '../constants';
 
 interface BarDisplayProps {
   currentBar: number;
@@ -26,6 +27,7 @@ const BarDisplay: React.FC<BarDisplayProps> = ({
   // Otherwise, show the metronome currentBar.
   const mainValue = isTapping ? tapCount : currentBar;
   const mainLabel = isTapping ? "Tap Count" : "Measure Count";
+  const tempoName = getTempoMarking(bpm);
 
   return (
     <div 
@@ -50,6 +52,7 @@ const BarDisplay: React.FC<BarDisplayProps> = ({
 
         {/* Top Right: BPM Display */}
         <div className="absolute top-4 right-4 md:top-6 md:right-6 flex flex-col items-end transition-colors group-hover:text-accent">
+            <div className="text-[10px] md:text-xs font-bold text-accent_glow/80 uppercase tracking-wider mb-0.5">{tempoName}</div>
             <div className="text-2xl md:text-4xl font-black text-slate-500 group-hover:text-accent transition-colors font-mono leading-none">{bpm}</div>
             <div className="text-[9px] md:text-[10px] text-slate-600 font-bold tracking-widest uppercase mt-1">BPM / TAP</div>
         </div>
@@ -77,9 +80,6 @@ const BarDisplay: React.FC<BarDisplayProps> = ({
 
                 if (isTapping) {
                     // Cumulative lighting for taps
-                    // Note: tapCount might exceed beatsPerBar if user keeps tapping (restarting bar), 
-                    // but usually visual feedback is modulo or clamping. 
-                    // Let's make it intuitive: Highlight up to the current count in this sequence.
                     isActive = beatNum <= tapCount;
                     isDownbeat = beatNum === 1; // Always style first beat as downbeat
                 } else {

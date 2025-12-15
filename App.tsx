@@ -9,7 +9,7 @@ import Visualizer from './components/Visualizer';
 import AppLogo from './components/AppLogo';
 import InstallPrompt from './components/InstallPrompt';
 import { TimeSignature } from './types';
-import { SIGNATURE_CONFIGS, DEFAULT_BPM, MIN_BPM, MAX_BPM } from './constants';
+import { SIGNATURE_CONFIGS, DEFAULT_BPM, MIN_BPM, MAX_BPM, getTempoMarking } from './constants';
 
 type Tab = 'practice' | 'tuner' | 'dictionary';
 
@@ -234,6 +234,7 @@ const App: React.FC = () => {
                             <div className="flex-1 w-full space-y-2">
                                 <div className="flex justify-between items-center mb-1">
                                     <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tempo (BPM)</label>
+                                    <span className="text-xs font-bold text-accent">{getTempoMarking(bpm)}</span>
                                 </div>
                                 <input 
                                     type="range" 
