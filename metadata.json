@@ -1,0 +1,7 @@
+{
+  "name": "Smart Bar Counter",
+  "description": "A precision bar counter and metronome with AI configuration and tap tempo.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
