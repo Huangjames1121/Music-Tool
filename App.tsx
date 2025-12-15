@@ -233,8 +233,10 @@ const App: React.FC = () => {
                             {/* BPM Control */}
                             <div className="flex-1 w-full space-y-2">
                                 <div className="flex justify-between items-center mb-1">
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tempo (BPM)</label>
-                                    <span className="text-xs font-bold text-accent">{getTempoMarking(bpm)}</span>
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tempo</label>
+                                    <span className="text-xs font-bold text-accent font-mono">
+                                        {getTempoMarking(bpm)} <span className="text-slate-500 mx-1">|</span> {bpm} BPM
+                                    </span>
                                 </div>
                                 <input 
                                     type="range" 
