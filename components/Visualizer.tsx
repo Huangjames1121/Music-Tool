@@ -77,15 +77,16 @@ const Visualizer: React.FC = () => {
 
     if (!isListening) {
         return (
-             <div className="absolute top-4 right-4 z-50">
+             <div className="absolute top-4 left-4 z-50">
                 {error ? (
                     <span className="text-red-400 text-xs font-mono">{error}</span>
                 ) : (
                     <button 
                         onClick={startListening}
-                        className="flex items-center gap-2 text-xs text-slate-500 hover:text-accent transition-colors"
+                        className="flex items-center gap-2 text-xs text-slate-500 hover:text-accent transition-colors p-2 bg-slate-900/50 rounded-full border border-slate-800/50 backdrop-blur-sm"
                     >
-                        <Mic size={14} /> Enable Mic Vis
+                        <Mic size={14} /> 
+                        <span className="hidden xs:inline">Vis</span>
                     </button>
                 )}
              </div>
@@ -97,7 +98,7 @@ const Visualizer: React.FC = () => {
             ref={canvasRef} 
             width={200} 
             height={50} 
-            className="absolute top-4 right-4 z-0 opacity-50 pointer-events-none" 
+            className="absolute top-4 left-4 z-0 opacity-50 pointer-events-none" 
         />
     );
 };

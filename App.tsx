@@ -7,6 +7,7 @@ import Tuner from './components/Tuner';
 import MusicDictionary from './components/MusicDictionary';
 import Visualizer from './components/Visualizer';
 import AppLogo from './components/AppLogo';
+import InstallPrompt from './components/InstallPrompt';
 import { TimeSignature } from './types';
 import { SIGNATURE_CONFIGS, DEFAULT_BPM, MIN_BPM, MAX_BPM } from './constants';
 
@@ -21,6 +22,9 @@ const App: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('practice');
   const [isMuted, setIsMuted] = useState(false);
+  
+  // New state for display logic
+  const [tapCount, setTapCount] = useState(0);
 
   // Derived config
   const beatsPerBar = customBeats ?? SIGNATURE_CONFIGS[timeSigKey].beats;
@@ -39,6 +43,9 @@ const App: React.FC = () => {
 
   // Unified Tap Handler
   const handleTapUpdate = ({ bpm, count }: { bpm: number | null, count: number }) => {
+      // Set the visual tap count
+      setTapCount(count);
+
       // 1. Update Beat Count (Bar Length)
       // If user taps 3 times, set to 3 beats per bar.
       if (count >= 1) {
@@ -56,13 +63,33 @@ const App: React.FC = () => {
   // Initialize Tap Tempo Hook
   const { handleTap } = useTapTempo(handleTapUpdate);
 
+  const handleStart = () => {
+      setTapCount(0); // Clear tap count to show measure count
+      start();
+  };
+
+  const handleReset = () => {
+      setTapCount(0); // Clear tap count to show measure count
+      reset();
+  };
+
+  const handleStop = () => {
+      stop();
+      // We don't necessarily clear tap count here, but usually stop implies pausing measure count.
+      // Keeping tapCount as is (likely 0 from start) ensures we see Measure Count when paused.
+  };
+
   const handleTimeSigChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value as TimeSignature;
     setTimeSigKey(val);
     // Reset custom overrides
     setCustomBeats(null);
     setCustomVal(null);
+    setTapCount(0);
   };
+
+  // Logic to determine if we are in "Tapping Mode" (visuals) or "Metronome Mode"
+  const isTappingMode = !isPlaying && tapCount > 0;
 
   return (
     <div className="min-h-[100dvh] bg-slate-900 text-slate-100 font-sans selection:bg-accent selection:text-slate-900 flex flex-col relative overflow-x-hidden">
@@ -74,6 +101,11 @@ const App: React.FC = () => {
       </div>
 
       <Visualizer />
+      
+      {/* PWA Install Button (Absolute Positioned) */}
+      <div className="absolute top-4 right-4 z-50">
+        <InstallPrompt />
+      </div>
 
       <header className="px-4 py-4 md:p-6 md:pb-2 text-center z-10 flex flex-col items-center">
         <div className="flex items-center gap-3 mb-1 animate-in slide-in-from-top-4 duration-500">
@@ -139,12 +171,14 @@ const App: React.FC = () => {
                 isPlaying={isPlaying}
                 bpm={bpm}
                 onTap={handleTap}
+                isTapping={isTappingMode}
+                tapCount={tapCount}
             />
 
             {/* Playback Controls */}
             <div className="flex items-center gap-3 md:gap-4">
                 <button 
-                    onClick={reset}
+                    onClick={handleReset}
                     className="p-3 md:p-4 rounded-full bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition-all border border-slate-700 active:scale-95 active:bg-slate-600"
                     title="Reset Counter"
                 >
@@ -152,7 +186,7 @@ const App: React.FC = () => {
                 </button>
 
                 <button 
-                    onClick={isPlaying ? stop : start}
+                    onClick={isPlaying ? handleStop : handleStart}
                     className={`
                         p-5 md:p-6 rounded-full transition-all shadow-xl hover:scale-105 active:scale-95
                         flex items-center justify-center
